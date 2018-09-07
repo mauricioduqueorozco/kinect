@@ -1,10 +1,10 @@
 #!/bin/sh
 
 echo "Clean up"
-rm -rf /hello
+rm -rf /main
 
 echo "Create hello"
-gcc -o hello hello.c
-
+# gcc -o main main.c -lusb-1.0 -framework GLUT OpenGL lGLU lglut -lGL -lGLU -lglut -Wno-deprecated-declarations
+gcc -o main main.c -lusb-1.0 -framework GLUT -pthread -Wno-deprecated-declarations
 echo "Open up"
-open ./hello
+./main

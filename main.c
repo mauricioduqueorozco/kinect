@@ -6,15 +6,64 @@
 #include <pthread.h>
 
 #ifdef __APPLE__
+  #include <GLUT/glut.h>
+  #include <OpenGL/gl.h>
+  #include <OpenGL/glu.h>
+  // #include <OpenGL/gl3.h>
+  // #define __gl_h_
   // #include <GLUT/glut.h>
-  // #include <OpenGL/gl.h>
-  // #include <OpenGL/glu.h>
   // #include </usr/local/Cellar/libusb/1.0.22/include/libusb-1.0/libusb.h>
 #else
   // #include <GL/glut.h>
   // #include <GL/gl.h>
   // #include <GL/glu.h>
 #endif
+
+pthread_t gl_thread;
+
+int g_argc;
+char **g_argv;
+
+int window;
+
+void InitGL(int Width, int Height)
+{
+	// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	// glClearDepth(1.0);
+	// glDepthFunc(GL_LESS);
+	// glDisable(GL_DEPTH_TEST);
+	// glEnable(GL_BLEND);
+	// glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// glShadeModel(GL_SMOOTH);
+	// glGenTextures(1, &gl_depth_tex);
+	// glBindTexture(GL_TEXTURE_2D, gl_depth_tex);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// glGenTextures(1, &gl_rgb_tex);
+	// glBindTexture(GL_TEXTURE_2D, gl_rgb_tex);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// ReSizeGLScene(Width, Height);
+}
+
+
+void *gl_threadfunc(void *arg){
+  printf("%s\n\n", "GL thread");
+  glutInit(&g_argc, g_argv);
+
+  glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
+  glutInitWindowSize(1280, 480);
+  glutInitWindowPosition(0, 0);
+
+  window = glutCreateWindow("SolidKnect");
+  // glutDisplayFunc(&DrawGLScene);
+  // glutIdleFunc(&DrawGLScene);
+  // glutReshapeFunc(&ReSizeGLScene);
+  // glutKeyboardFunc(&keyPressed);
+  InitGL(1280, 480);
+
+  return NULL;
+}
 
 void print_devices(libusb_device *dev){
   struct libusb_device_descriptor desc;
@@ -57,15 +106,21 @@ void print_devices(libusb_device *dev){
 }
 
 int main(int argc, char **argv){
-    printf("%s\n", "Starting program");
+    printf("%s\n", "Starting program\n\n");
     libusb_device **devices;
     libusb_context *context = NULL;
+    libusb_device_handle *dev;
 
     ssize_t list = 0;
     size_t i;
     int ret;
+    int res;
+
+    g_argc = argc;
+    g_argv = argv;
 
     ret = libusb_init(&context);
+
     if(ret < 0){
       perror("libusb_init");
       exit(1);
@@ -78,7 +133,21 @@ int main(int argc, char **argv){
       libusb_exit(context);
       exit(1);
     }
-    printf("%zd\n", list);
+    printf("List of devices connected: %zd\n", list);
+
+    dev = libusb_open_device_with_vid_pid(NULL, 0x45e, 0x2ae);
+    if(!dev){
+      perror("Cannot connect to Kinect device, make sure it is connected\n\n");
+      exit(1);
+    }else{
+      printf("Connection success with Kinect device\n\n");
+    }
+
+    res = pthread_create(&gl_thread, NULL, gl_threadfunc, NULL);
+    if (res) {
+      printf("pthread_create failed\n");
+      return 1;
+    }
 
     for (int i = 0; i < list; i++) {
       print_devices(devices[i]);

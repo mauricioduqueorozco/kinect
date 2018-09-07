@@ -5,4 +5,4 @@ Ugly connection with USB
 
 TODO
 
--- REcieve and send commands to Kinect
+-- Recieve and send commands to Kinect
